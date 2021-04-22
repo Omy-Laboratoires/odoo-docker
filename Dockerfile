@@ -90,7 +90,6 @@ VOLUME [ \
   "/opt/odoo/etc", \
   "/var/lib/odoo/", \
   "/opt/odoo/additional_addons", \
-  "/opt/odoo/data", \
   "/opt/odoo/ssh", \
   "/opt/scripts" \
 ]

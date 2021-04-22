@@ -31,9 +31,10 @@ function _ensure_odoo_user_owns_volume {
 function _ensure_odoo_user_owns_volumes {
     _ensure_odoo_user_owns_volume /opt/odoo/etc
     _ensure_odoo_user_owns_volume /opt/odoo/additional_addons
-    _ensure_odoo_user_owns_volume /opt/odoo/data
-    _ensure_odoo_user_owns_volume /opt/odoo/data/filestore
-    _ensure_odoo_user_owns_volume /opt/odoo/data/sessions
+    _ensure_odoo_user_owns_volume /opt/odoo/
+    _ensure_odoo_user_owns_volume /var/lib/odoo/
+    _ensure_odoo_user_owns_volume /var/lib/odoo/filestore
+    _ensure_odoo_user_owns_volume /var/lib/odoo/sessions
     _ensure_odoo_user_owns_volume /opt/odoo/data/addons
     _ensure_odoo_user_owns_volume /opt/odoo/ssh
 }
@@ -201,12 +202,12 @@ function start {
 
     echo $log_src[`date +%F.%H:%M:%S`]' Running odoo...'
     if [ ! -e $1 ]; then
-        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' $*
+        echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' "$@"
     fi
     sudo -i -u "$odoo_user" "$PYTHON_BIN" \
-        "/opt/odoo/sources/odoo/$SERVICE_BIN" -c "$odoo_conf_file" $*
+        "/opt/odoo/sources/odoo/$SERVICE_BIN" -c "$odoo_conf_file" "$@"
 }
 
 # Run command
-$*
+"$@"
 

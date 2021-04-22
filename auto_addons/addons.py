@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2015 Elico Corp
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import os
@@ -6,7 +5,7 @@ import re
 import shutil
 import subprocess
 import sys
-import urlparse
+from urllib.parse import urlparse
 
 EXTRA_ADDONS_PATH = '/opt/odoo/additional_addons/'
 ODOO_ADDONS_PATH = '/opt/odoo/sources/odoo/addons'
@@ -17,7 +16,7 @@ DEFAULT_ORGANIZATION = 'OCA'
 DEPENDENCIES_FILE = 'oca_dependencies.txt'
 
 
-class Repo(object):
+class Repo:
     """
     Fetch Git repositories recursively.
 
@@ -27,7 +26,7 @@ class Repo(object):
     Following the oca_dependencies.txt syntax:
     https://github.com/OCA/maintainer-quality-tools/blob/master/sample_files/oca_dependencies.txt
     """
-    def __init__(self, remote_url, fetch_dep, parent=None):
+    def __init__(self, remote_url, fetch_dep=True, parent=None):
         self.remote_url = remote_url
         self.fetch_dep = fetch_dep
         self.parent = parent
@@ -66,17 +65,17 @@ class Repo(object):
             self.organization = args[0]
             self.repository = args[1]
         else:
-            print >> sys.stderr, 'FATAL: unexpected repository pattern'
-            print >> sys.stderr, 'Expected pattern #1: public-repo'
-            print >> sys.stderr, 'Expected pattern #2: organization/public-repo'
-            print >> sys.stderr, 'Actual value: %s' % repo
+            print('FATAL: unexpected repository pattern', file=sys.stderr)
+            print('Expected pattern #1: public-repo', file=sys.stderr)
+            print('Expected pattern #2: organization/public-repo', file=sys.stderr)
+            print(f'Actual value: {repo}', file=sys.stderr)
 
     def _parse_url(self, url):
         path = None
 
         if Repo._is_http(url):
             # Pattern: 'https://github.com/organization/public-repo'
-            parsed_url = urlparse.urlparse(url)
+            parsed_url = urlparse(url)
 
             self.scheme = parsed_url.scheme
             self.netloc = parsed_url.netloc
@@ -84,9 +83,9 @@ class Repo(object):
             if len(parsed_url.path) > 0:
                 path = parsed_url.path[1:]
             else:
-                print >> sys.stderr, 'FATAL: unexpected repository pattern'
-                print >> sys.stderr, 'Expected pattern: https://github.com/organization/public-repo'
-                print >> sys.stderr, 'Actual value: %s' % url
+                print('FATAL: unexpected repository pattern', file=sys.stderr)
+                print('Expected pattern: https://github.com/organization/public-repo', file=sys.stderr)
+                print(f'Actual value: {url}', file=sys.stderr)
                 return
         else:
             # Pattern: 'git@github.com:organization/private-repo'
@@ -97,9 +96,9 @@ class Repo(object):
                 self.netloc = args[0]
                 path = args[1]
             else:
-                print >> sys.stderr, 'FATAL: unexpected repository pattern'
-                print >> sys.stderr, 'Expected pattern: git@github.com:organization/private-repo'
-                print >> sys.stderr, 'Actual value: %s' % url
+                print('FATAL: unexpected repository pattern', file=sys.stderr)
+                print('Expected pattern: git@github.com:organization/private-repo', file=sys.stderr)
+                print(f'Actual value: {url}', file=sys.stderr)
                 return
 
         # Pattern: 'organization/repo'
@@ -110,9 +109,9 @@ class Repo(object):
             # Repo might end with '.git' but it's optional
             self.repository = args[1].replace('.git', '')
         else:
-            print >> sys.stderr, 'FATAL: unexpected repository pattern'
-            print >> sys.stderr, 'Expected pattern: organization/repo' 
-            print >> sys.stderr, 'Actual value: %s' % path
+            print('FATAL: unexpected repository pattern', file=sys.stderr)
+            print('Expected pattern: organization/repo', file=sys.stderr)
+            print(f'Actual value: {path}', file=sys.stderr)
 
     def _parse_repo(self, repo):
         if Repo._is_url(repo):
@@ -152,34 +151,21 @@ class Repo(object):
 
     @property
     def path(self):
-        return '%s%s' % (EXTRA_ADDONS_PATH, self.folder)
+        return f'{EXTRA_ADDONS_PATH}{self.folder}'
 
     @property
     def resolve_url(self):
-        return '%s://%s/%s/%s.git' % (
-            self.scheme,
-            self.netloc,
-            self.organization,
-            self.repository
-        )
+        return f'{self.scheme}://{self.netloc}/{self.organization}/{self.repository}.git'
 
     @property
     def download_cmd(self):
         if self.branch:
-            cmd = 'git clone -b %s %s %s' % (
-                self.branch, self.resolve_url, self.path
-            )
-        else:
-            cmd = 'git clone %s %s' % (
-                self.resolve_url, self.path
-            )
-        return cmd
+            return f'git clone -b {self.branch} {self.resolve_url} {self.path}'
+        return f'git clone {self.resolve_url} {self.path}'
 
     @property
     def update_cmd(self):
-        cmd = 'git -C %s pull origin %s' % (
-            self.path, self.branch
-        )
+        cmd = f'git -C {self.path} pull origin {self.branch}'
         return cmd
 
     def _fetch_branch_name(self):
@@ -191,9 +177,7 @@ class Repo(object):
         #   8.0.1.0
         #   9.0
         #   9.0.1.0
-        branch_cmd = 'git -C %s branch' % (
-            self.path
-        )
+        branch_cmd = f'git -C {self.path} branch'
 
         # Search for the branch prefixed with '* '
         try:
@@ -206,29 +190,28 @@ class Repo(object):
                     break
 
             if not found:
-                print >> sys.stderr, 'FATAL: cannot fetch branch name'
-                print >> sys.stderr, 'Path: %s' % self.path
+                print('FATAL: cannot fetch branch name', file=sys.stderr)
+                print(f'Path: {self.path}', file=sys.stderr)
 
-        except Exception, e:
-            print >> sys.stderr, 'FATAL: cannot fetch branch name'
-            print >> sys.stderr, e
+        except Exception as e:
+            print('FATAL: cannot fetch branch name', file=sys.stderr)
+            print(e, file=sys.stderr)
 
     def _download_dependencies(self, addons_path):
         # Check if the repo contains a dependency file
-        filename = '%s/%s' % (self.path, DEPENDENCIES_FILE)
+        filename = f'{self.path}/{DEPENDENCIES_FILE}'
         if not os.path.exists(filename):
             return
 
         # Download the dependencies
         with open(filename) as f:
             for line in f:
-                l = line.strip('\n').strip()
-                if l and not l.startswith('#'):
-                    Repo(l, self.fetch_dep, self).download(addons_path)
+                line = line.strip('\n').strip()
+                if line and not line.startswith('#'):
+                    Repo(line, self.fetch_dep, self).download(addons_path)
 
     def download(self, addons_path, parent=None, is_retry=False):
-
-	# No need to fetch a repo twice (it could also cause infinite loop)
+        # No need to fetch a repo twice (it could also cause infinite loop)
         if self.path in addons_path:
             return
 
@@ -240,16 +223,16 @@ class Repo(object):
 
             if self.fetch_dep:
                 # Perform `git pull`
-                print 'Pulling: %s' % self.remote_url
+                print(f'Pulling: {self.remote_url}')
                 sys.stdout.flush()
                 result = subprocess.call(self.update_cmd.split())
 
                 if result != 0:
-                    print >> sys.stderr, 'FATAL: cannot git pull repository'
-                    print >> sys.stderr, 'URL: %s' % self.remote_url
+                    print('FATAL: cannot git pull repository', file=sys.stderr)
+                    print(f'URL: {self.remote_url}', file=sys.stderr)
         else:
             # Perform `git clone`
-            print 'Cloning: %s' % self.remote_url
+            print(f'Cloning: {self.remote_url}')
             sys.stdout.flush()
             result = subprocess.call(self.download_cmd.split())
 
@@ -261,14 +244,15 @@ class Repo(object):
                     self.download(
                         addons_path,
                         parent=parent.parent,
-                        is_retry=True)
+                        is_retry=True
+                    )
                 elif not is_retry:
                     # Retry one last time with the default branch of the repo
                     self.branch = None
                     self.download(addons_path, is_retry=True)
                 else:
-                    print >> sys.stderr, 'FATAL: cannot git clone repository'
-                    print >> sys.stderr, 'URL: %s' % self.remote_url
+                    print('FATAL: cannot git clone repository', file=sys.stderr)
+                    print(f'URL: {self.remote_url}', file=sys.stderr)
             else:
                 # Branch name is used to fetch the child repos
                 self._fetch_branch_name()
@@ -288,7 +272,7 @@ def write_addons_path(addons_path):
                 target.write(line)
 
         # Append addons_path
-        target.write('addons_path = %s' % ','.join(addons_path))
+        target.write(f'addons_path = {",".join(addons_path)}')
 
     shutil.move(conf_file, ODOO_CONF)
 
@@ -315,16 +299,15 @@ def main():
         # additional_addons folder, download them all
         with open(EXTRA_ADDONS_PATH + DEPENDENCIES_FILE, 'r') as f:
             for line in f:
-                l = line.strip('\n').strip()
-                if l and not l.startswith('#'):
-                    Repo(l, fetch_dep).download(addons_path)
+                line = line.strip('\n').strip()
+                if line and not line.startswith('#'):
+                    Repo(line, fetch_dep).download(addons_path)
 
     # Odoo standard addons path must be the last, in case an additional addon
     # uses the same name as a standard module (e.g. Odoo EE 'web' module in v9)
     addons_path.append(ODOO_ADDONS_PATH)
-
     write_addons_path(addons_path)
+
 
 if __name__ == '__main__':
     main()
-
