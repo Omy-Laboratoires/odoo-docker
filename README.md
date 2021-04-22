@@ -1,6 +1,7 @@
 # elicocorp/odoo
-Simple yet powerful [Odoo][odoo] image for [Docker][dk] maintained by
-[Elico Corporation][ec].
+Simple yet powerful [Odoo][odoo] image for [Docker][dk] created by [Elico Corporation][ec].
+
+This is a forked and modified version to meet our needs. The original is in their git: <https://github.com/Elico-Corp/odoo-docker>
 
   [odoo]: https://www.odoo.com/
   [dk]: https://www.docker.com/
@@ -43,15 +44,6 @@ host. For more information about Docker Engine, see the
 
 <a name="run_image"></a>
 ### Run the image[^][toc]
-Running this image without specifying any command will display this help
-message:
-
-    $ docker run elicocorp/odoo:10.0
-
-To display the user manual, run the image with the command `man`. Redirecting
-`stdout` to `less` is highly recommended:
-
-    $ docker run elicocorp/odoo:10.0 man | less
 
 To start Odoo, run the image with the command `start`:
 
@@ -78,12 +70,12 @@ more information about Compose, see the [official documentation][dc-doc].
     services:
 
       postgres:
-        image: postgres:9.5
+        image: postgres:13
         environment:
           - POSTGRES_USER=odoo
 
       odoo:
-        image: elicocorp/odoo:10.0
+        image: elicocorp/odoo:14.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -177,10 +169,10 @@ be made persistent in order to preserve the data:
             "Use volumes | Docker Documentation"
 
 1. the PostgreSQL database in `/var/lib/postgresql/data`
-2. the Odoo filestore in `/opt/odoo/data/filestore`
+2. the Odoo filestore in `/var/lib/odoo/filestore`
 
 Optionally, it is also possible to map the Odoo sessions folder in
-`/opt/odoo/data/sessions`
+`/var/lib/odoo/sessions`
 
 In the following example, these volumes are mapped under the folder `volumes`
 which is in the same folder as the `docker-compose.yml`. This command will
@@ -209,8 +201,8 @@ The `docker-compose.yml` should look like:
         links:
           - postgres:db
         volumes:
-          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
-          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+          - ./volumes/odoo/filestore:/var/lib/odoo/filestore
+          - ./volumes/odoo/sessions:/var/lib/odoo/sessions
         environment:
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
           - ODOO_DB_USER=odoo
@@ -264,7 +256,7 @@ actually belong to the corresponding user on the host.
 Following the previous example:
 
 * in the Odoo container, the files created by the `odoo` user in the folder
-`/opt/odoo/data/filestore` will be stored on the host in the folder
+`/var/lib/odoo/filestore` will be stored on the host in the folder
 `./volumes/odoo/filestore` and belong to the host user `elico`
 * in the PostgreSQL container, the files created by the `postgres` user in the
 folder `/var/lib/postgresql/data` will be stored on the host in the folder
@@ -343,8 +335,8 @@ The `docker-compose.yml` should look like:
         links:
           - postgres:db
         volumes:
-          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
-          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+          - ./volumes/odoo/filestore:/var/lib/odoo/filestore
+          - ./volumes/odoo/sessions:/var/lib/odoo/sessions
         environment:
           - TARGET_UID=1001
           - ODOO_ADMIN_PASSWD=strong_odoo_master_password
@@ -441,7 +433,7 @@ as well as all the Git repositories it depends on, you can use the following
     services:
 
       postgres:
-        image: postgres:9.5
+        image: postgres:13
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
           - /etc/passwd:/etc/passwd:ro
@@ -451,7 +443,7 @@ as well as all the Git repositories it depends on, you can use the following
         user: 1001:1001
 
       odoo:
-        image: elicocorp/odoo:10.0
+        image: elicocorp/odoo:14.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -459,8 +451,8 @@ as well as all the Git repositories it depends on, you can use the following
           - postgres:db
         volumes:
           - ./volumes/odoo/addons:/opt/odoo/additional_addons
-          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
-          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+          - ./volumes/odoo/filestore:/var/lib/odoo/filestore
+          - ./volumes/odoo/sessions:/var/lib/odoo/sessions
         environment:
           - ADDONS_REPO=https://github.com/OCA/project.git
           - TARGET_UID=1001
@@ -513,7 +505,7 @@ The `docker-compose.yml` should look like:
     services:
 
       postgres:
-        image: postgres:9.5
+        image: postgres:13
         volumes:
           - ./volumes/postgres:/var/lib/postgresql/data
           - /etc/passwd:/etc/passwd:ro
@@ -523,7 +515,7 @@ The `docker-compose.yml` should look like:
         user: 1001:1001
 
       odoo:
-        image: elicocorp/odoo:10.0
+        image: elicocorp/odoo:14.0
         command: start
         ports:
           - 127.0.0.1:8069:8069
@@ -531,8 +523,8 @@ The `docker-compose.yml` should look like:
           - postgres:db
         volumes:
           - ./volumes/odoo/addons:/opt/odoo/additional_addons
-          - ./volumes/odoo/filestore:/opt/odoo/data/filestore
-          - ./volumes/odoo/sessions:/opt/odoo/data/sessions
+          - ./volumes/odoo/filestore:/var/lib/odoo/filestore
+          - ./volumes/odoo/sessions:/var/lib/odoo/sessions
           - ./volumes/odoo/ssh:/opt/odoo/ssh:ro
         environment:
           - ADDONS_REPO=git@github.com:Elico-Corp/odoo-private-addons.git
