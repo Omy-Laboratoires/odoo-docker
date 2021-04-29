@@ -165,8 +165,7 @@ class Repo:
 
     @property
     def update_cmd(self):
-        cmd = f'git -C {self.path} pull origin {self.branch}'
-        return cmd
+        return f'git -C {self.path} pull origin {self.branch}'
 
     def _fetch_branch_name(self):
         # Example of output from `git branch` command:
@@ -182,7 +181,7 @@ class Repo:
         # Search for the branch prefixed with '* '
         try:
             found = False
-            output = subprocess.check_output(branch_cmd, shell=True)
+            output = subprocess.check_output(branch_cmd, shell=True).decode()
             for line in output.split('\n'):
                 if line.startswith('*'):
                     self.branch = line.replace('* ', '')
@@ -192,7 +191,6 @@ class Repo:
             if not found:
                 print('FATAL: cannot fetch branch name', file=sys.stderr)
                 print(f'Path: {self.path}', file=sys.stderr)
-
         except Exception as e:
             print('FATAL: cannot fetch branch name', file=sys.stderr)
             print(e, file=sys.stderr)
