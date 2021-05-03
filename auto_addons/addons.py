@@ -7,6 +7,7 @@ import subprocess
 import sys
 from urllib.parse import urlparse
 
+LOCAL_ODOO_ADDON_PATH = '/opt/odoo/local_addons/'
 EXTRA_ADDONS_PATH = '/opt/odoo/additional_addons/'
 ODOO_ADDONS_PATH = '/opt/odoo/sources/odoo/addons'
 ODOO_CONF = '/opt/odoo/etc/odoo.conf'
@@ -270,6 +271,8 @@ def write_addons_path(addons_path):
                 target.write(line)
 
         # Append addons_path
+        if LOCAL_ODOO_ADDON_PATH not in addons_path:
+            addons_path.append(LOCAL_ODOO_ADDON_PATH)
         target.write(f'addons_path = {",".join(addons_path)}')
 
     shutil.move(conf_file, ODOO_CONF)

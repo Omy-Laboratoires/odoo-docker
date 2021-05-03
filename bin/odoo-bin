@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+# set server timezone in UTC before time module imported
+import sys
+
+__import__('os').environ['TZ'] = 'UTC'
+import os
+import odoo
+
+if __name__ == "__main__":
+    if (debug_host := os.getenv('PYCHARM_DEBUG_HOST', None)) and (debug_port := os.getenv('PYCHARM_DEBUG_PORT', None)):
+        print('Connecting to PyCharm')
+        import pydevd_pycharm
+        pydevd_pycharm.settrace(debug_host, port=int(debug_port), stdoutToServer=True, stderrToServer=True)
+    odoo.cli.main()
+
+
