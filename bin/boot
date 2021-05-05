@@ -205,9 +205,17 @@ function start {
         echo $log_src[`date +%F.%H:%M:%S`]' ...with additional args:' "$@"
     fi
 
+    if [ "${COPY_ODOO_SOURCES}" = "true" ]; then
+      cp -r /opt/odoo/sources/odoo/* /opt/odoo-sources/
+    fi
+
+    if [ "${LIVE_RELOAD}" = "true" ]; then
+      LIVE_RELOAD_OPTION="--dev=reload "
+    fi
+
     BASE_CMD="/opt/odoo/sources/odoo/$SERVICE_BIN"
     sudo -i --preserve-env=PYCHARM_DEBUG_HOST --preserve-env=PYCHARM_DEBUG_PORT \
-      -u "$odoo_user" "${PYTHON_BIN}" "${BASE_CMD}" -c "$odoo_conf_file" "$@"
+      -u "$odoo_user" "${PYTHON_BIN}" "${BASE_CMD}" -c "$odoo_conf_file" "$LIVE_RELOAD_OPTION" "$@"
 }
 
 # Run command
