@@ -5,3 +5,4 @@ py3o.types==0.1.1
 pydevd-pycharm~=211.7142.13
 pydevd-odoo==1.1
 watchdog==2.1.0
+pyocclient
