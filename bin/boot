@@ -64,7 +64,7 @@ function _update_odoo_conf_params {
 
         # Get the value of the corresponding ENV variable and escape slashes
         val=${!env_var}
-        val=$( echo "$val" | sed 's/\//\\\//g' )
+        # val=$( echo "$val" | sed 's/\//\\\//g' )
 
         _update_odoo_param "$odoo_param" "$val"
 
